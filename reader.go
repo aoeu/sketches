@@ -12,6 +12,12 @@ type placeholder struct {
 	bar [512]byte
 }
 
+const barSize int = 512
+
+type placeholderReader struct {
+	offset int
+}	
+
 func (p *placeholder) WriteTo(w io.Writer) error {
 	if err := binary.Write(w, binary.LittleEndian, []byte(p.foo)); err != nil {
 		return err
@@ -22,9 +28,10 @@ func (p *placeholder) WriteTo(w io.Writer) error {
 	return nil
 }
 
+
 var bw *bufio.Writer
 
-func (p *placeholder) Read(b []byte) (n int, err error) {
+func (p *placeholder) readWithPipeAndBufio(b []byte) (n int, err error) {
 	if len(b) == 0 {
 		return 0, nil
 	}
@@ -34,11 +41,27 @@ func (p *placeholder) Read(b []byte) (n int, err error) {
 	return r.Read(b)
 }
 
+func print(size, read int, err error) {
+	fmt.Printf("print: buffer size after write is %v\n", size)
+	fmt.Printf("print: The number of bytes read was %v with error '%v'\n", read, err)
+}
+
+
 func main() {
-	placeholder := &placeholder{foo: "foo", bar: [512]byte{'b', 'a', 'r'}}
+	foo := "foo"
+	placeholder := &placeholder{foo: foo, bar: [barSize]byte{'b', 'a', 'r'}}
+	
+	// Works for a destination byte slice that is a smaller size than all source data bytes.
 	b := make([]byte, 6)
-	n, err := placeholder.Read(b)
-	fmt.Printf("main: buffer size after write is %v\n", bw.Buffered())
-	fmt.Printf("main: The number of bytes read was %v with error '%v'\n", n, err)
+	n, err := placeholder.readWithPipeAndBufio(b)
+	print(bw.Buffered(), n, err)
+
+	// Deadlocks for a destination byte slice that is equal to or greater than all source data bytes.
+	/*
+	b = make([]byte, barSize + len(foo))
+	n, err = placeholder.readWithPipeAndBufio(b)
+	print(bw.Buffered(), n, err)
+	*/
+
 	fmt.Printf("main: Contents of destination byte slice is: %v\n", b)
 }

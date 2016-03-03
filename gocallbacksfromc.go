@@ -6,30 +6,30 @@ import (
 )
 
 /*
-extern void go_callback_dispatcher(int callbackID);
+extern void callGolangFunc(int functionID);
 
 // Ideally, C functions or variables would be defined
 // in another separate C file to avoid the multiple definition
-// errors, however, using "static inline" is a nice workaround
+// errors. However, using "static inline" is a nice workaround
 // for simple functions like this one.
-static inline void CallMyGoFunction(int callbackID) {
-    go_callback_dispatcher(callbackID);
+static inline void call_a_golang_function_with_id(int function_id) {
+    callGolangFunc(function_id);
 }
 */
 import "C"
 
-//export go_callback_dispatcher
-func go_callback_dispatcher(id C.int) {
-	callback, ok := callbacks[id]
+//export callGolangFunc
+func callGolangFunc(id C.int) {
+	function, ok := functions[id]
 	if !ok {
-		fmt.Fprintln(os.Stderr, "Could not find callback function with ID %v\n", id)
+		fmt.Fprintln(os.Stderr, "No golang function to call was found with ID %v\n", id)
 		return
 	}
-	callback(id)
+	function(id)
 }
 
-func PrintCallbackIDFromGo(id C.int) {
-	fmt.Printf("PrintCallbackIDFromGo was called via ID: %v\n", id)
+func printFuncID(id C.int) {
+	fmt.Printf("printFuncID was called via function ID: %v\n", id)
 }
 
 // Store the Go callback function in a global map because an unsafe.Pointer
@@ -55,10 +55,10 @@ func PrintCallbackIDFromGo(id C.int) {
 // Keep in mind that those who give up correctness (type-safety)
 // for temporary convenience may not have sufficiently felt the
 // inevitable inconvenience of incorrectness.
-var callbacks = make(map[C.int]func(C.int))
+var functions = make(map[C.int]func(C.int))
 
 func main() {
-	var callbackID C.int = 777
-	callbacks[callbackID] = PrintCallbackIDFromGo
-	C.CallMyGoFunction(C.int(callbackID))
+	var id C.int = 777
+	functions[id] = printFuncID
+	C.call_a_golang_function_with_id(C.int(id))
 }

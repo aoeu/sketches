@@ -6,30 +6,31 @@ import (
 )
 
 /*
-extern void callGolangFunc(int functionID);
+extern void callGolangFunc(int functionID, int extraData);
 
 // Ideally, C functions or variables would be defined
 // in another separate C file to avoid the multiple definition
 // errors. However, using "static inline" is a nice workaround
 // for simple functions like this one.
 static inline void call_a_golang_function_with_id(int function_id) {
-    callGolangFunc(function_id);
+	int extra_data = 12345;
+    callGolangFunc(function_id, extra_data);
 }
 */
 import "C"
 
 //export callGolangFunc
-func callGolangFunc(id C.int) {
+func callGolangFunc(id C.int, extraData C.int) {
 	function, ok := functions[id]
 	if !ok {
 		fmt.Fprintln(os.Stderr, "No golang function to call was found with ID %v\n", id)
 		return
 	}
-	function(id)
+	function(extraData)
 }
 
-func printFuncID(id C.int) {
-	fmt.Printf("printFuncID was called via function ID: %v\n", id)
+func printDataSentFromC(id C.int) {
+	fmt.Printf("printDataSentFromC was called with data: %v\n", id)
 }
 
 // Store the Go callback function in a global map because an unsafe.Pointer
@@ -59,6 +60,6 @@ var functions = make(map[C.int]func(C.int))
 
 func main() {
 	var id C.int = 777
-	functions[id] = printFuncID
+	functions[id] = printDataSentFromC
 	C.call_a_golang_function_with_id(C.int(id))
 }

@@ -69,20 +69,7 @@ where
 order by
 	table_name
 `
-	t := make([]string, 0)
-	rows, err := db.Query(q, schemaName)
-	if err != nil {
-		return t, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var n string
-		if err := rows.Scan(&n); err != nil {
-			return t, err
-		}
-		t = append(t, n)
-	}
-	return t, rows.Err()
+	return queryForVarCharColumn(db, q, schemaName)
 }
 
 func columnNames(db *sql.DB, tableName string) ([]string, error) {
@@ -96,19 +83,22 @@ where
 order by
 	column_name
 `
+	return queryForVarCharColumn(db, q, tableName)
+}
+
+func queryForVarCharColumn(db *sql.DB, query string, arg string) ([]string, error) {
 	t := make([]string, 0)
-	rows, err := db.Query(q, tableName)
+	rows, err := db.Query(query, arg)
 	if err != nil {
 		return t, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var n string
-		if err := rows.Scan(&n); err != nil {
+		var s string
+		if err := rows.Scan(&s); err != nil {
 			return t, err
 		}
-		t = append(t, n)
+		t = append(t, s)
 	}
 	return t, rows.Err()
-
 }

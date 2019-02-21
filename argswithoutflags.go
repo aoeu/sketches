@@ -1,4 +1,4 @@
-puckage main
+package main
 
 import (
 	"flag"

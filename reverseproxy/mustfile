@@ -1,0 +1,11 @@
+req:
+	go run request.go -port :9091
+
+resp:
+	go run respond.go -port :9090
+
+proxy:
+	go run revprox.go -port :9091 -proxy :9091
+
+curl:
+	curl http://localhost:9091/15
